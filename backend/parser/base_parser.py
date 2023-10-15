@@ -4,6 +4,7 @@ from typing import NoReturn
 import requests.exceptions
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import IntegrityError
+from psycopg2 import DataError
 from requests import request
 from tqdm import tqdm
 
@@ -24,7 +25,7 @@ class BaseParser:
 
     HH_LINK = 'https://hh.ru/search/vacancy?area=113&employment=full&excluded_text=%D0%BC%D0%B5%D0%BD%D0%B5%D0%B4%D0%B6%D0%B5%D1%80%2C%D0%B2%D0%BE%D0%B4%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%2C%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0%2C%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B8&search_field=name&search_field=description&only_with_salary=true&text=python+OR+php+OR+c%2B%2B+OR+c%23+OR+javascript+OR+java&no_magic=true&L_save_area=true&search_period=1&items_on_page=20&hhtmFrom=vacancy_search_list'  # noqa: E501
     HABR_LINK = 'https://career.habr.com/vacancies/rss?currency=RUR&s[]=2&s[]=3&s[]=82&s[]=4&s[]=5&s[]=72&s[]=1&s[]=6&s[]=77&s[]=83&s[]=86&s[]=73&s[]=8&s[]=9&s[]=85&s[]=7&s[]=75&sort=relevance&type=all&with_salary=true'  # noqa: E501
-    SUPERJOBLINK = 'https://russia.superjob.ru/vacancy/search/?keywords=c%23%2Cpython%2Cjavascript%2Cphp%2Cc%2B%2B%2Cjava&payment_value=20000&period=1&payment_defined=1&click_from=facet'  # noqa: E501
+    SUPERJOB_LINK = 'https://russia.superjob.ru/vacancy/search/?keywords=c%23%2Cpython%2Cjavascript%2Cphp%2Cc%2B%2B%2Cjava&payment_value=20000&period=1&payment_defined=1&click_from=facet'  # noqa: E501
     GETMATCH_LINK = 'https://getmatch.ru/vacancies?sa=150000&l=moscow&l=remote&l=saints_p&pa=1d&s=landing_ca_header'  # noqa: E501
     PROGLIB_LINK = 'https://proglib.io/vacancies/all?direction=Programming&workType=fulltime&workPlace=all&experience=100&salaryFrom=500&page=1'  # noqa: E501
     STOP_WORDS = (
@@ -62,7 +63,7 @@ class BaseParser:
 
         Определяется отдельно в каждом классе парсера.
         """
-        pass
+        return 0
 
     def _get_pages(self, text: str) -> list[str]:
         """Метод возвращает список страниц(URL) с вакансиями"""
@@ -103,6 +104,25 @@ class BaseParser:
         return string.strip().replace('  ', '').replace('\n', ' ').replace(
             '\t', '').replace('\xa0', ' ').replace('город ', '').replace(
             'деревня ', '').replace('г. ', '')
+
+    @staticmethod
+    def text_cleaner(string: str) -> str:
+        """Метод очищает строку от символов и html"""
+        mapping = {
+            ord(','): None,
+            ord('.'): None,
+            ord(':'): None,
+            ord(';'): None,
+            ord('\''): None,
+            ord('\"'): None,
+            ord('•'): None,
+            ord('('): None,
+            ord(')'): None,
+        }
+        return string.translate(mapping).replace(
+            '<p>', '').replace(
+            '</p>', '').replace(
+            '<br>', '')
 
     @staticmethod
     def rm_punctuations(string: str) -> str:
@@ -159,6 +179,7 @@ class BaseParser:
                 set(self.STOP_WORDS)
             ):
                 try:
+                    print(vacancy)
                     city_obj = City.objects.get_or_create(
                         name=vacancy.company.city.name
                     )[0]
@@ -218,3 +239,8 @@ class BaseParser:
                     print(e)
                 except TypeError as e:
                     print(e)
+                except Vacancy.DoesNotExist as e:
+                    print(e)
+                except DataError as e:
+                    print(e)
+

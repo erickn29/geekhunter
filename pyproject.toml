@@ -22,6 +22,7 @@ pydantic = "^2.3.0"
 django-extensions = "^3.2.3"
 schedule = "^1.2.0"
 djoser = "^2.2.0"
+ipython = "^8.16.1"
 
 [build-system]
 requires = ["poetry-core"]

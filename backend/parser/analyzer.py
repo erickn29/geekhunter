@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 
-from client_api_app.models import Language
+from client_api_app.models import Language, StackTool
 
 
 class Analyzer:
@@ -30,7 +30,7 @@ class Analyzer:
     LANGUAGES_MAPPING = {
         ('Python', 'python'): 'Python',
         ('PHP', ): 'PHP',
-        ('C++', 'С++'): 'C++',
+        ('C++', 'С++', 'СС++'): 'C++',
         ('C#', 'С#'): 'C#',
         (
             'JavaScript',
@@ -93,6 +93,7 @@ class Analyzer:
         'директор по информационным технологиям',),
         'Менеджер продукта': ('менеджер продукта',),
         'Методолог': ('методолог',),
+        'Преподаватель': ('преподаватель', ),
         'Программист': (
         'программист', 'разработчик', 'веб-разработчик', 'developer',
         'frontend-разработчик',
@@ -101,7 +102,7 @@ class Analyzer:
         'web-программист', 'fullstack-разработчик', 'фронтенд-разработчик',
         'мидл-разработчик',
         'backend-developer', 'программист-разработчик', 'инженер-разработчик',
-        'ml-разработчик'),
+        'ml-разработчик', 'инженер'),
         'Продуктовый аналитик': ('продуктовый аналитик',),
         'Руководитель группы разработки': (
         'руководитель группы разработки', 'lead', 'руководитель группы',
@@ -213,3 +214,16 @@ class Analyzer:
             if k in text:
                 return v
         return None
+
+    @staticmethod
+    def get_stack_raw_text(text: str) -> list[str]:
+        """Метод возвращает список навыков"""
+        from parser.base_parser import BaseParser
+        stack_values = list(StackTool.objects.values_list('name', flat=True))
+        stack_list = []
+        cleaned_text = BaseParser.text_cleaner(text).lower()
+        for stack in stack_values:
+            if stack.lower() in cleaned_text and len(
+                    stack) > 1 and stack not in stack_list:
+                stack_list.append(stack)
+        return stack_list

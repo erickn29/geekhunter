@@ -32,7 +32,6 @@ class HHParser(BaseParser):
         counter = 0
         if text:
             elements_list = re.findall(r'pager-page-wrapper-\d+-\d+', text)
-
             if elements_list:
                 for el in tqdm(elements_list):
                     last_el = int(el.split('-')[-1]) + 1
@@ -79,7 +78,7 @@ class HHParser(BaseParser):
                             set(
                                 block_title.lower().split()
                             ) & set(self.STOP_WORDS)
-                        ):
+                        ) and len(block_link) < 200:
                             links_list.append(block_link)
             except requests.exceptions.RequestException:
                 print(f'Не смог обработать страницу {page}')
