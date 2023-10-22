@@ -1,5 +1,6 @@
 import re
 
+import pydantic
 import requests
 from requests import request
 from tqdm import tqdm
@@ -23,6 +24,8 @@ class HHParser(BaseParser):
     """Парсер для hh.ru"""
 
     LINK = BaseParser.HH_LINK
+    PAGE_ATTR = 'page'
+    MAX_LINK_LENGTH = 200
 
     def __init__(self) -> None:
         super().__init__(url=self.LINK)
@@ -78,7 +81,7 @@ class HHParser(BaseParser):
                             set(
                                 block_title.lower().split()
                             ) & set(self.STOP_WORDS)
-                        ) and len(block_link) < 200:
+                        ) and len(block_link) < self.MAX_LINK_LENGTH:
                             links_list.append(block_link)
             except requests.exceptions.RequestException:
                 print(f'Не смог обработать страницу {page}')
@@ -98,7 +101,7 @@ class HHParser(BaseParser):
             return self.string_cleaner(
                 soup.find('div', {'class': "vacancy-description"}).text
             )
-        return None
+        return soup.text
 
     @staticmethod
     def _get_speciality(title: str, text: str) -> str | None:
@@ -284,5 +287,7 @@ class HHParser(BaseParser):
             except ValueError as e:
                 print(e, link)
             except TypeError as e:
+                print(e, link)
+            except pydantic.ValidationError as e:
                 print(e, link)
         return None

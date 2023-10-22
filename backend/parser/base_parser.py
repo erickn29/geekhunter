@@ -26,7 +26,7 @@ class BaseParser:
     HH_LINK = 'https://hh.ru/search/vacancy?area=113&employment=full&excluded_text=%D0%BC%D0%B5%D0%BD%D0%B5%D0%B4%D0%B6%D0%B5%D1%80%2C%D0%B2%D0%BE%D0%B4%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%2C%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0%2C%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B8&search_field=name&search_field=description&only_with_salary=true&text=python+OR+php+OR+c%2B%2B+OR+c%23+OR+javascript+OR+java&no_magic=true&L_save_area=true&search_period=1&items_on_page=20&hhtmFrom=vacancy_search_list'  # noqa: E501
     HABR_LINK = 'https://career.habr.com/vacancies/rss?currency=RUR&s[]=2&s[]=3&s[]=82&s[]=4&s[]=5&s[]=72&s[]=1&s[]=6&s[]=77&s[]=83&s[]=86&s[]=73&s[]=8&s[]=9&s[]=85&s[]=7&s[]=75&sort=relevance&type=all&with_salary=true'  # noqa: E501
     SUPERJOB_LINK = 'https://russia.superjob.ru/vacancy/search/?keywords=c%23%2Cpython%2Cjavascript%2Cphp%2Cc%2B%2B%2Cjava&payment_value=20000&period=1&payment_defined=1&click_from=facet'  # noqa: E501
-    GETMATCH_LINK = 'https://getmatch.ru/vacancies?sa=150000&l=moscow&l=remote&l=saints_p&pa=1d&s=landing_ca_header'  # noqa: E501
+    GETMATCH_LINK = 'https://getmatch.ru/vacancies?sa=150000&l=moscow&l=remote&l=saints_p&pa=3d&s=landing_ca_header'  # noqa: E501
     PROGLIB_LINK = 'https://proglib.io/vacancies/all?direction=Programming&workType=fulltime&workPlace=all&experience=100&salaryFrom=500&page=1'  # noqa: E501
     STOP_WORDS = (
         '1C', '1С', '1с', '1c', 'машинист', 'водитель', 'таксист', 'курьер',
@@ -35,6 +35,9 @@ class BaseParser:
     )
     sleep_time = 0.5
     course_rate = 100
+
+    LINK = None
+    PAGE_ATTR = None
 
     def __init__(self, url: str) -> NoReturn:
         """Стандартный конструктор класса"""
@@ -65,14 +68,14 @@ class BaseParser:
         """
         return 0
 
-    def _get_pages(self, text: str) -> list[str]:
+    def _get_pages(self, text: str, attr: str) -> list[str]:
         """Метод возвращает список страниц(URL) с вакансиями"""
         print(f'Получаем список страниц(URL) с вакансиями {self.source_name}')
         num_pages = self._get_num_pages(text)
         page_list = []
         if num_pages > 0:
             for page in tqdm(range(num_pages)):
-                url = self.url + f'&page={page}'
+                url = self.url + f'&{attr}={page}'
                 page_list.append(url)
             return page_list
         return [self.url, ]
@@ -150,7 +153,7 @@ class BaseParser:
         """
         vacancies = schema.VacanciesList()
         main_page_html = self._get_main_page_html()
-        pages_list = self._get_pages(main_page_html)
+        pages_list = self._get_pages(main_page_html, self.PAGE_ATTR)
         vacancy_links = self._get_vacancies_links(
             pages_list if not test else [pages_list[0], pages_list[-1]]
         )

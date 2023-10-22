@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 
 from django.db.models import Q, QuerySet
-from django.http import HttpRequest
 from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import generics
 import os
 from dotenv import load_dotenv
 
-from parser.test_parsers import main
+from parser.run_parsers import main
 from client_api_app.models import Vacancy, Language, Experience, Grade, \
     Speciality, StackTool, City
 from client_api_app.serializers import VacancySerializer, LanguageSerializer, \
@@ -20,11 +20,11 @@ load_dotenv()
 
 
 @api_view(['POST', ])
-def test(request: HttpRequest) -> Response:
+def test(request: Request) -> Response:
     """Тестовая"""
-    if request.POST.get('token') == os.getenv('PARSER_TOKEN'):
-        data = main(True)
-        return Response({'test': data})
+    if request.data.get('token') == os.getenv('PARSER_TOKEN'):
+        main(True, True, True, True)
+        return Response({'test': 'data'})
     return Response({'error': 'token error'})
 
 

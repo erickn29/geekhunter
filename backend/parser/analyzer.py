@@ -13,6 +13,7 @@ class Analyzer:
         'C#',
         'JavaScript',
         'Java',
+        'Node.js',
         'Golang',
         'Swift',
         'Kotlin',
@@ -34,6 +35,7 @@ class Analyzer:
         ('C#', 'С#'): 'C#',
         (
             'JavaScript',
+            'JS',
             'react.js',
             'Frontend',
             'Node.JS',
@@ -42,6 +44,7 @@ class Analyzer:
             'Node.js',
             'Vue',
             'Angular',
+            'Frontend-разработчик'
         ): 'JavaScript',
         ('Java', 'JAVA', 'Spring'): 'Java',
         ('Golang', 'GO', 'Go'): 'Golang',
@@ -102,11 +105,11 @@ class Analyzer:
         'web-программист', 'fullstack-разработчик', 'фронтенд-разработчик',
         'мидл-разработчик',
         'backend-developer', 'программист-разработчик', 'инженер-разработчик',
-        'ml-разработчик', 'инженер'),
+        'ml-разработчик', 'инженер', 'software engineer'),
         'Продуктовый аналитик': ('продуктовый аналитик',),
         'Руководитель группы разработки': (
         'руководитель группы разработки', 'lead', 'руководитель группы',
-        'тимлид', 'teamlead'),
+        'тимлид', 'teamlead', 'руководитель команды разработки'),
         'Руководитель отдела аналитики': ('руководитель отдела аналитики',),
         'Руководитель проектов': ('руководитель проектов',),
         'Сетевой инженер': ('сетевой инженер',),
@@ -140,36 +143,49 @@ class Analyzer:
     @staticmethod
     def get_language(title: str, text: str, stack: list = None) -> str | None:
         """Метод возвращает название языка программирования"""
-        for word in title.split(' '):
-            for tpl, lang in Analyzer.LANGUAGES_MAPPING.items():
-                if word.lower() in list(map(str.lower, tpl)):
-                    obj: Language = Language.objects.get_or_create(
-                        name=lang)[0]
-                    return obj.name
-        if stack:
+        try:
+            title = title.replace(',', '')
+            stack = [item.name.lower() for item in stack] if stack else []
+            text = text.replace(',', '') if text else ''
+            for word in title.split(' '):
+                for tpl, lang in Analyzer.LANGUAGES_MAPPING.items():
+                    if word.lower() in list(map(str.lower, tpl)):
+                        obj: Language = Language.objects.get_or_create(
+                            name=lang)[0]
+                        return obj.name
+            if stack:
+                for lang in Analyzer.LANGUAGES:
+                    if lang.lower() in stack:
+                        obj: Language = Language.objects.get_or_create(
+                            name=lang)[0]
+                        return obj.name
             for lang in Analyzer.LANGUAGES:
-                if lang in stack:
+                if lang.lower() in text.lower():
                     obj: Language = Language.objects.get_or_create(
                         name=lang)[0]
                     return obj.name
-        for lang in Analyzer.LANGUAGES:
-            if lang.lower() in text.lower():
-                obj: Language = Language.objects.get_or_create(name=lang)[0]
-                return obj.name
-        return None
+            return None
+        except AttributeError as e:
+            print(e)
+        except IndexError as e:
+            print(e)
 
     @staticmethod
     def get_speciality(title: str, text: str) -> str | None:
         """Метод возвращает название специальности"""
-        for k, v in Analyzer.SPECIALITIES.items():
-            for item in v:
-                if item in title.lower():
-                    return k
-        for k, v in Analyzer.SPECIALITIES.items():
-            for item in v:
-                if item in text.lower():
-                    return k
-        return None
+        try:
+            for k, v in Analyzer.SPECIALITIES.items():
+                for item in v:
+                    if item in title.lower():
+                        return k
+            for k, v in Analyzer.SPECIALITIES.items():
+                for item in v:
+                    if item in text.lower():
+                        return k
+            return None
+        except AttributeError as e:
+            print(e)
+            return None
 
     @staticmethod
     def get_grade(title: str, text: str, experience: str = None) -> str | None:

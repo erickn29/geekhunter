@@ -1,11 +1,8 @@
 import json
-import re
 
 import pydantic
-import requests
 from requests import request
-from tqdm import tqdm
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup as bs  # noqa: N813
 
 from .base_parser import BaseParser
 from .analyzer import Analyzer
@@ -22,6 +19,7 @@ from .schema import (
 
 
 class SuperJobParser(BaseParser):
+    """Парсер для SuperJob"""
 
     LINK = BaseParser.SUPERJOB_LINK
 
@@ -66,8 +64,8 @@ class SuperJobParser(BaseParser):
                 exp_obj = soup.select_one('.f-test-address').nextSibling
                 text = bs(data['description'], 'html.parser')
                 new_text = BaseParser.text_cleaner(Analyzer.html_to_text(text))
-                is_remote = True if data.get(
-                    'jobLocationType') == 'TELECOMMUTE' else False
+                is_remote = data.get(
+                    'jobLocationType') == 'TELECOMMUTE'
                 stack_tools = [
                     StackTool(name=i) for i in Analyzer.get_stack_raw_text(
                         new_text)
